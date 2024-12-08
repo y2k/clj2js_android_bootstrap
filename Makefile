@@ -1,6 +1,6 @@
 .PHONY: build
 build:
-docker build --platform linux/arm64 -t y2khub/cljdroid .
+	docker build --platform linux/arm64 -t y2khub/cljdroid .
 
 .PHONY: deploy
 deploy: build
