@@ -1,6 +1,11 @@
 FROM debian:11.8
 
-RUN apt-get update && apt-get install -y wget unzip openjdk-17-jdk
+RUN apt-get update && apt-get install -y qemu-user-static binfmt-support \
+    && dpkg --add-architecture amd64 && apt-get update
+
+RUN apt-get install -y libc6:amd64 libstdc++6:amd64 zlib1g:amd64 wget unzip openjdk-17-jdk
+
+# RUN apt-get update && apt-get install -y wget unzip openjdk-17-jdk
 
 ENV ANDROID_SDK_ROOT /opt/android-sdk
 ENV PATH $PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
