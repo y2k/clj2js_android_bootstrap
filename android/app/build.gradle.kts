@@ -4,8 +4,8 @@ plugins {
 }
 
 android {
-    namespace = "im.y2k.chargetimer"
-    compileSdk = 35
+    namespace = "im.y2k.fixme"
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "im.y2k.fixme"
@@ -41,11 +41,11 @@ android {
 }
 
 dependencies {
-    implementation("com.google.code.gson:gson:2.10.1")
-    implementation("com.github.requery:sqlite-android:3.45.0")
+    implementation("com.google.code.gson:gson:2.13.1")
+    implementation("com.github.requery:sqlite-android:3.49.0")
 
-    implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.core:core-ktx:1.16.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.2")
 
     testImplementation("junit:junit:4.13.2")
 

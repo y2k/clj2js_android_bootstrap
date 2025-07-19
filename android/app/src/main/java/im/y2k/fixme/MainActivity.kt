@@ -1,4 +1,4 @@
-package im.y2k.chargetimer
+package im.y2k.fixme
 
 import android.app.Activity
 import android.os.Bundle
