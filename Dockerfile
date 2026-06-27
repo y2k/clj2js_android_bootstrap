@@ -34,6 +34,9 @@ RUN yes | sdkmanager --licenses && \
         "build-tools;36.0.0" \
         "build-tools;37.0.0"
 
+RUN mkdir -p /root/.android
+COPY android/debug.keystore /root/.android/debug.keystore
+
 ### ### ### ### ### ### ### ### ### ### ###
 
 WORKDIR /app
