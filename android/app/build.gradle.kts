@@ -4,6 +4,11 @@ plugins {
     id("com.android.application")
 }
 
+val generatedDependencies = file("dependencies.gradle")
+if (generatedDependencies.exists()) {
+    apply(from = generatedDependencies)
+}
+
 android {
     namespace = "im.y2k.fixme"
     compileSdk = 37
