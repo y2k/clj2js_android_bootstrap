@@ -1,0 +1,7 @@
+.git
+.github
+.vscode
+android/.gradle
+android/.idea
+android/**/build
+android/local.properties
