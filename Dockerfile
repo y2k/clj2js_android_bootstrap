@@ -1,16 +1,10 @@
 FROM debian:13-slim
 
-RUN apt-get update && apt-get install -y --no-install-recommends qemu-user-static binfmt-support \
-    && if [ "$(dpkg --print-architecture)" != "amd64" ]; then dpkg --add-architecture amd64; fi \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
-        libc6:amd64 \
-        libstdc++6:amd64 \
         openjdk-21-jdk \
         unzip \
         wget \
-        zlib1g:amd64 \
     && rm -rf /var/lib/apt/lists/*
 
 ENV ANDROID_SDK_ROOT=/opt/android-sdk
@@ -32,7 +26,18 @@ RUN yes | sdkmanager --licenses && \
         "build-tools;34.0.0" \
         "build-tools;35.0.0" \
         "build-tools;36.0.0" \
-        "build-tools;37.0.0"
+        "build-tools;37.0.0" \
+    && if [ "$(dpkg --print-architecture)" = "arm64" ]; then \
+        release="https://github.com/Commit451/android-arm-build-tools/releases/download/platform-tools-36.0.0"; \
+        cd "$ANDROID_SDK_ROOT/build-tools/36.0.0"; \
+        for tool in aapt2 aidl zipalign split-select; do \
+            wget -q "$release/$tool" -O "$tool"; \
+            chmod +x "$tool"; \
+        done; \
+        wget -q "$release/SHA256SUMS" -O SHA256SUMS; \
+        sha256sum -c SHA256SUMS; \
+        rm SHA256SUMS; \
+    fi
 
 RUN mkdir -p /root/.android
 COPY android/debug.keystore /root/.android/debug.keystore
