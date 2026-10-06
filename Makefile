@@ -8,7 +8,8 @@ build:
 
 .PHONY: test
 test: build
-	docker run --rm --platform $(PLATFORM) --entrypoint ./gradlew $(IMAGE) assembleDebug --no-daemon --no-watch-fs -q
+	IMAGE=$(IMAGE) PLATFORM=$(PLATFORM) bash tests/build-command.sh
+	IMAGE=$(IMAGE) PLATFORM=$(PLATFORM) bash tests/smoke.sh
 
 .PHONY: publish
 publish: test

@@ -2,7 +2,7 @@
 set -eu
 
 root=$(cd "$(dirname "$0")/.." && pwd)
-docker run --rm -i \
+docker run --rm -i --platform "${PLATFORM:-linux/arm64}" \
   -v "$root/android/build.sh:/build-under-test.sh:ro" \
   --entrypoint /bin/bash "${IMAGE:-y2khub/cljdroid}" -s <<'TEST'
 set -eu
