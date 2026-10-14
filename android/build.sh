@@ -9,6 +9,9 @@ elif [ "$1" = "build" ] || [ "$1" = "build-release" ]; then
     variant=release
     apk=app-release-unsigned.apk
   fi
+  if [ -d /target/app/src/main/java ] || [ -d /target/app/src/main/kotlin ]; then
+    rm -rf /app/app/src/main/java /app/app/src/main/kotlin
+  fi
   cp -a /target/. /app/
   cd /app
   ./gradlew "assemble${variant^}" --no-daemon --no-watch-fs -q

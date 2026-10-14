@@ -71,5 +71,25 @@ prepare
 mkdir /output_apk/mapping.txt
 expect_failure build-release
 
-echo 'PASS: variant selection, artifact export, and failure propagation'
+for command in build build-release; do
+  for source_dir in java kotlin; do
+    prepare
+    mkdir -p /app/app/src/main/{java,kotlin} /target/app/src/main/"$source_dir"
+    printf 'template\n' > /app/app/src/main/java/Template.java
+    printf 'template\n' > /app/app/src/main/kotlin/Template.kt
+    printf 'custom\n' > /target/app/src/main/"$source_dir"/Custom.kt
+    bash /build-under-test.sh "$command"
+    test ! -e /app/app/src/main/java/Template.java || { echo 'FAIL: template Java source survived replacement' >&2; exit 1; }
+    test ! -e /app/app/src/main/kotlin/Template.kt
+    cmp /target/app/src/main/"$source_dir"/Custom.kt /app/app/src/main/"$source_dir"/Custom.kt
+  done
+done
+
+prepare
+mkdir -p /app/app/src/main/java
+printf 'template\n' > /app/app/src/main/java/Template.java
+bash /build-under-test.sh build
+test -s /app/app/src/main/java/Template.java
+
+echo 'PASS: variant selection, artifact export, failure propagation, and source replacement'
 TEST

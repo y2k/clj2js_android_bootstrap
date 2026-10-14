@@ -15,18 +15,15 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mkdir -p "$work/target/app/src/main/java/im/y2k/fixme" \
+mkdir -p "$work/target/app/src/main/java/im/y2k/cljdroid/smoke" \
   "$work/target/app/src/main/res/values" "$work/debug" "$work/release" "$work/failed"
-"${docker[@]}" --entrypoint cat "$image" /app/app/build.gradle.kts |
-  sed 's/applicationId = "im.y2k.fixme"/applicationId = "im.y2k.cljdroid.smoke"/' \
-    > "$work/target/app/build.gradle.kts"
-cat > "$work/target/app/src/main/java/im/y2k/fixme/MainActivity.kt" <<'KOTLIN'
-package im.y2k.fixme
+cat > "$work/target/app/src/main/java/im/y2k/cljdroid/smoke/MainActivity.kt" <<'KOTLIN'
+package im.y2k.cljdroid.smoke
 
 class MainActivity : android.app.Activity() {
     override fun onCreate(state: android.os.Bundle?) {
         super.onCreate(state)
-        val kept = Class.forName("im.y2k.fixme.KeptProbe")
+        val kept = Class.forName("im.y2k.cljdroid.smoke.KeptProbe")
         val message = kept.getMethod("message").invoke(kept.getDeclaredConstructor().newInstance())
         setContentView(android.widget.TextView(this).apply {
             text = "release smoke: $message ${ObfuscationProbe().message()}"
@@ -39,15 +36,15 @@ class KeptProbe { fun message() = "kept" }
 class ObfuscationProbe { fun message() = "renamed" }
 KOTLIN
 cat > "$work/target/app/proguard-rules.pro" <<'RULES'
--keep class im.y2k.fixme.KeptProbe { *; }
--keep,allowobfuscation class im.y2k.fixme.ObfuscationProbe { *; }
+-keep class im.y2k.cljdroid.smoke.KeptProbe { *; }
+-keep,allowobfuscation class im.y2k.cljdroid.smoke.ObfuscationProbe { *; }
 RULES
 cat > "$work/target/app/src/main/res/values/smoke.xml" <<'XML'
 <resources><string name="smoke_unused">This resource should be removed.</string></resources>
 XML
 
 build() {
-  "${docker[@]}" -v "$cache:/root/.gradle" \
+  "${docker[@]}" -e APP_ID=im.y2k.cljdroid.smoke -v "$cache:/root/.gradle" \
     -v "$work/target:/target:ro" -v "$work/$2:/output_apk" "$image" "$1"
 }
 build build debug
@@ -64,8 +61,12 @@ mapping=/artifacts/release/mapping.txt
 test -s "$debug"
 test -s "$release"
 test -s "$mapping"
-grep -q '^im.y2k.fixme.KeptProbe -> im.y2k.fixme.KeptProbe:' "$mapping"
-awk '$1 == "im.y2k.fixme.ObfuscationProbe" && $2 == "->" && $3 != "im.y2k.fixme.ObfuscationProbe:" { renamed = 1 } END { exit !renamed }' "$mapping"
+grep -q '^im.y2k.cljdroid.smoke.KeptProbe -> im.y2k.cljdroid.smoke.KeptProbe:' "$mapping"
+awk '$1 == "im.y2k.cljdroid.smoke.ObfuscationProbe" && $2 == "->" && $3 != "im.y2k.cljdroid.smoke.ObfuscationProbe:" { renamed = 1 } END { exit !renamed }' "$mapping"
+for apk in "$debug" "$release"; do
+  test "$(apkanalyzer manifest application-id "$apk")" = im.y2k.cljdroid.smoke
+  apkanalyzer manifest print "$apk" | grep -q 'android:name="im.y2k.cljdroid.smoke.MainActivity"'
+done
 test "$(apkanalyzer manifest debuggable "$debug")" = true
 test "$(apkanalyzer manifest debuggable "$release")" = false
 "$tools/aapt2" dump resources "$debug" > /artifacts/debug-resources.txt
@@ -90,7 +91,7 @@ keytool -genkeypair -keystore /artifacts/smoke.jks -storepass smoke-password \
 echo 'PASS: APKs, mapping, keep rules, resource shrinking, and external signing'
 VERIFY
 
-printf 'deliberately invalid Kotlin\n' > "$work/target/app/src/main/java/im/y2k/fixme/Broken.kt"
+printf 'deliberately invalid Kotlin\n' > "$work/target/app/src/main/java/im/y2k/cljdroid/smoke/Broken.kt"
 if build build-release failed > "$work/failed-build.log" 2>&1; then
   echo 'FAIL: invalid source produced a successful container exit' >&2
   exit 1
@@ -103,7 +104,7 @@ if [ -n "${SMOKE_DEVICE:-}" ]; then
   adb -s "$SMOKE_DEVICE" install "$work/app-release.apk"
   installed=true
   adb -s "$SMOKE_DEVICE" shell am start -W \
-    -n im.y2k.cljdroid.smoke/im.y2k.fixme.MainActivity > "$work/launch.txt"
+    -n im.y2k.cljdroid.smoke/im.y2k.cljdroid.smoke.MainActivity > "$work/launch.txt"
   grep -q 'Status: ok' "$work/launch.txt"
   pid=$(adb -s "$SMOKE_DEVICE" shell pidof im.y2k.cljdroid.smoke)
   adb -s "$SMOKE_DEVICE" logcat -d --pid="$pid" -s CljdroidSmoke:I '*:S' > "$work/runtime.log"

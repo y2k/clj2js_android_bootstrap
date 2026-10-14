@@ -9,12 +9,17 @@ if (generatedDependencies.exists()) {
     apply(from = generatedDependencies)
 }
 
+val appId = providers.environmentVariable("APP_ID").getOrElse("im.y2k.fixme")
+require(appId.matches(Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+"))) {
+    "APP_ID must be a dotted application ID, for example im.y2k.argent"
+}
+
 android {
-    namespace = "im.y2k.fixme"
+    namespace = appId
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "im.y2k.fixme"
+        applicationId = appId
         minSdk = 31
         targetSdk = 36
         versionCode = 1

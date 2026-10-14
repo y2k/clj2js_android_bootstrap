@@ -46,7 +46,29 @@ overwrite these output filenames.
 Files in `/target` are copied over the bundled `/app` project before building.
 Use matching relative paths, such as `target/app/src/main/AndroidManifest.xml`
 or `target/app/src/main/java/...`. Supplied files replace their bundled versions,
-including `app/proguard-rules.pro`.
+including `app/proguard-rules.pro`. If the overlay contains `app/src/main/java`
+or `app/src/main/kotlin` (even empty), both bundled source directories are removed
+before copying. Without either directory, bundled sources are preserved.
+
+### Build your own application
+
+Supply your sources and `app/src/main/AndroidManifest.xml` under `target/`, then
+set `APP_ID` to configure both the Gradle namespace and application ID:
+
+```sh
+docker run --rm \
+  -e APP_ID=im.y2k.argent \
+  -v "$HOME/.gradle:/root/.gradle" \
+  -v "$PWD/target:/target:ro" \
+  -v "$PWD/output_apk:/output_apk" \
+  y2khub/cljdroid build
+```
+
+This also works with `build-release`. `APP_ID` defaults to `im.y2k.fixme` when
+unset; empty or malformed values fail the build. Source package declarations
+are not rewritten: use packages matching your code and manifest. Relative
+activity names such as `.MainActivity` resolve against the configured namespace.
+If you supply your own `app/build.gradle.kts`, it controls these settings instead.
 
 For a class accessed through reflection, add a targeted keep rule (replace the
 example class with your own):
