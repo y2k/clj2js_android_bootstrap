@@ -2,6 +2,11 @@
 
 Build Android APKs with `y2khub/cljdroid` and a project overlay.
 
+The image uses Debian's OpenJDK 25 package for Gradle and Java compilation on both
+amd64 and arm64. The bundled template targets Java/Kotlin 22, supporting unnamed
+Java lambda parameters (`_`) without preview flags. Overlays replacing
+`app/build.gradle.kts` control their own language targets.
+
 ## Build
 
 From this repository, build the image locally to include release support; the

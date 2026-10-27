@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends qemu-user-stati
         ca-certificates \
         libc6:amd64 \
         libstdc++6:amd64 \
-        openjdk-21-jdk \
+        openjdk-25-jdk \
         unzip \
         wget \
         zlib1g:amd64 \

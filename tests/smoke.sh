@@ -26,7 +26,7 @@ class MainActivity : android.app.Activity() {
         val kept = Class.forName("im.y2k.cljdroid.smoke.KeptProbe")
         val message = kept.getMethod("message").invoke(kept.getDeclaredConstructor().newInstance())
         setContentView(android.widget.TextView(this).apply {
-            text = "release smoke: $message ${ObfuscationProbe().message()}"
+            text = "release smoke: $message ${ObfuscationProbe().message()} ${UnnamedProbe.message()}"
             android.util.Log.i("CljdroidSmoke", text.toString())
         })
     }
@@ -35,6 +35,19 @@ class MainActivity : android.app.Activity() {
 class KeptProbe { fun message() = "kept" }
 class ObfuscationProbe { fun message() = "renamed" }
 KOTLIN
+cat > "$work/target/app/src/main/java/im/y2k/cljdroid/smoke/UnnamedProbe.java" <<'JAVA'
+package im.y2k.cljdroid.smoke;
+
+public final class UnnamedProbe {
+    public static String message() {
+        java.util.function.Function<Object, String> handler = (_) -> "unnamed-ok";
+        return handler.apply(new Object());
+    }
+}
+JAVA
+cat > "$work/target/app/dependencies.gradle" <<'GROOVY'
+assert JavaVersion.current() == JavaVersion.VERSION_25
+GROOVY
 cat > "$work/target/app/proguard-rules.pro" <<'RULES'
 -keep class im.y2k.cljdroid.smoke.KeptProbe { *; }
 -keep,allowobfuscation class im.y2k.cljdroid.smoke.ObfuscationProbe { *; }
@@ -108,7 +121,7 @@ if [ -n "${SMOKE_DEVICE:-}" ]; then
   grep -q 'Status: ok' "$work/launch.txt"
   pid=$(adb -s "$SMOKE_DEVICE" shell pidof im.y2k.cljdroid.smoke)
   adb -s "$SMOKE_DEVICE" logcat -d --pid="$pid" -s CljdroidSmoke:I '*:S' > "$work/runtime.log"
-  grep -q 'release smoke: kept renamed' "$work/runtime.log"
+  grep -q 'release smoke: kept renamed unnamed-ok' "$work/runtime.log"
   echo 'PASS: signed release installed, launched, and executed the runtime probes'
 else
   echo 'SKIP: install/launch check (set SMOKE_DEVICE to a connected device serial)'
